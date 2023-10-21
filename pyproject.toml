@@ -8,10 +8,14 @@ packages = [{include = "module_level_lint"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+flake8 = "^6.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
+
+[tool.poetry.plugins."flake8.extension"]
+MLL = "module_level_lint:Plugin"
 
 [build-system]
 requires = ["poetry-core"]
