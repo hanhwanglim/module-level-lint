@@ -10,6 +10,9 @@ packages = [{include = "module_level_lint"}]
 python = "^3.9"
 
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
