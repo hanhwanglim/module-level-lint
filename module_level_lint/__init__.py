@@ -8,21 +8,10 @@ DUNDER_PATTERN = r"^__[a-zA-Z_]\w*__$"
 
 
 class Error:
-    MLL001 = "Module level docstring appears after code"
-    MLL002 = "Module level future-imports appears after module level dunders"
-    MLL003 = "Module level future-imports appears after code"
-    MLL004 = "Module level dunders appears after code"
-
-
-@dataclasses.dataclass
-class SeenStmt:
-    module_docstring_idx: Optional[ast.stmt] = None
-    future_import_idx: Optional[ast.stmt] = None
-    module_dunder_idx: Optional[ast.stmt] = None
-    code_idx: Optional[ast.stmt] = None
-
-    def values(self) -> tuple[Optional[ast.stmt], Optional[ast.stmt], Optional[ast.stmt], Optional[ast.stmt]]:
-        return self.module_docstring_idx, self.future_import_idx, self.module_dunder_idx, self.code_idx
+    MLL001 = "MLL001 Module level docstring appears after code"
+    MLL002 = "MLL002 Module level future-imports appears after module level dunders"
+    MLL003 = "MLL003 Module level future-imports appears after code"
+    MLL004 = "MLL004 Module level dunders appears after code"
 
 
 def is_module_docstring(node: ast.stmt) -> bool:
@@ -39,7 +28,11 @@ def is_module_docstring(node: ast.stmt) -> bool:
 def is_future_import(node: ast.stmt) -> bool:
     if not isinstance(node, (ast.Import, ast.ImportFrom)):
         return False
-    return "__future__" in [alias.name for alias in node.names]
+    if isinstance(node, ast.Import) and "__future__" in [name.name for name in node.names]:
+        return True
+    if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+        return True
+    return False
 
 
 def is_dunder(node: ast.stmt) -> bool:
@@ -58,53 +51,36 @@ def is_code(node: ast.stmt) -> bool:
 class Visitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.errors: [tuple[int, int, str]] = []
-        self.seen_stmt = SeenStmt()
 
     def visit_Module(self, node: ast.Module) -> None:
+        seen = 0
+
         for body in node.body:
-            self.check_for_mll001(body)
+            if is_module_docstring(body):
+                seen = max(seen, 1)
+            if is_future_import(body):
+                seen = max(seen, 2)
+            if is_dunder(body):
+                seen = max(seen, 3)
+            if is_code(body):
+                seen = max(seen, 4)
+            self.check(body, seen)
 
         self.generic_visit(node)
 
-    def check_for_mll001(self, node: ast.stmt) -> None:
-        """MLL001: Module level docstring should be at the top of the file"""
-        if is_module_docstring(node):
-            self.seen_stmt.module_docstring_idx = node
-            _, seen_future, seen_dunder, seen_code = self.seen_stmt.values()
-            if seen_future or seen_dunder or seen_code:
-                self.errors.append((node.lineno, node.col_offset, Error.MLL001))
-
-    def check_for_mll002(self, node: ast.stmt) -> None:
-        """MLL002: Module level future-imports should be at the top of the file"""
-        if is_future_import(node):
-            self.seen_stmt.future_import_idx = node
-            _, _, seen_dunder, seen_code = self.seen_stmt.values()
-            if seen_dunder or seen_code:
-                self.errors.append((node.lineno, node.col_offset, Error.MLL002))
-
-    def check_for_mll003(self, node: ast.stmt) -> None:
-        """MLL003: Module level future-imports should be after module level docstrings"""
-        if is_module_docstring(node):
-            self.seen_stmt.module_docstring_idx = node
-            _, seen_future, _, _ = self.seen_stmt.values()
-            if seen_future:
-                self.errors.append((node.lineno, node.col_offset, Error.MLL003))
-
-    def check_for_mll004(self, node: ast.stmt) -> None:
-        MLL004 = "Module level dunders should be at the top of the file"
-        if is_dunder(node):
-            self.seen_stmt.module_dunder_idx = node
-            _, _, _, seen_code = self.seen_stmt.values()
-            if seen_code:
-                self.errors.append((node.lineno, node.col_offset, Error.MLL004))
-
-    def check_for_mll005(self, node: ast.stmt) -> None:
-        MLL005 = "Module level dunders should be after module level docstrings"
-        if is_future_import(node):
-            self.seen_stmt.module_dunder_idx = node
-            _, _, seen_dunder, seen_code = self.seen_stmt.values()
-            if seen_code:
-                self.errors.append((node.lineno, node.col_offset, Error.MLL004))
+    def check(self, node: ast.stmt, seen: int) -> None:
+        if is_module_docstring(node) and seen > 1:
+            self.errors.append((node.lineno, node.col_offset, Error.MLL001))
+            return
+        if is_future_import(node) and seen == 3:
+            self.errors.append((node.lineno, node.col_offset, Error.MLL002))
+            return
+        if is_future_import(node) and seen == 4:
+            self.errors.append((node.lineno, node.col_offset, Error.MLL003))
+            return
+        if is_dunder(node) and seen > 3:
+            self.errors.append((node.lineno, node.col_offset, Error.MLL004))
+            return
 
 
 class Plugin:
