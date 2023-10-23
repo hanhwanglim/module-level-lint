@@ -56,7 +56,7 @@ def is_dunder(node: ast.stmt) -> bool:
 
 class Visitor(ast.NodeVisitor):
     def __init__(self) -> None:
-        self.errors: [tuple[int, int, str]] = []
+        self.errors: list[tuple[int, int, str]] = []
 
     def visit_Module(self, node: ast.Module) -> None:
         seen_node_type = NodeType.UNINITIALIZED

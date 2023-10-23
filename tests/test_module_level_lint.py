@@ -1,5 +1,6 @@
 import ast
 from functools import partial
+from pathlib import Path
 
 from module_level_lint import Plugin, Error
 from tests import FIXTURES
@@ -15,7 +16,7 @@ MLL003 = partial(error_str, msg=Error.MLL003)
 MLL004 = partial(error_str, msg=Error.MLL004)
 
 
-def run_lint(path) -> list[str]:
+def run_lint(path: Path) -> list[str]:
     with open(path) as f:
         tree = ast.parse(f.read())
     plugin = Plugin(tree)
