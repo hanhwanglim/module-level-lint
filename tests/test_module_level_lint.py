@@ -19,7 +19,10 @@ def run_lint(path) -> list[str]:
     with open(path) as f:
         tree = ast.parse(f.read())
     plugin = Plugin(tree)
-    return [error_str(lineno, col_offset, msg) for lineno, col_offset, msg, _ in plugin.run()]
+    return [
+        error_str(lineno, col_offset, msg)
+        for lineno, col_offset, msg, _ in plugin.run()
+    ]
 
 
 def test_trivial() -> None:

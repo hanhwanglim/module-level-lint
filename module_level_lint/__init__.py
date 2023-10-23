@@ -1,9 +1,8 @@
-import dataclasses
 import re
 import ast
 import importlib.metadata
-from enum import Enum, IntEnum
-from typing import Any, Generator, Optional
+from enum import IntEnum
+from typing import Any, Generator
 
 DUNDER_PATTERN = r"^__[a-zA-Z_]\w*__$"
 
@@ -37,7 +36,9 @@ def is_module_docstring(node: ast.stmt) -> bool:
 def is_future_import(node: ast.stmt) -> bool:
     if not isinstance(node, (ast.Import, ast.ImportFrom)):
         return False
-    if isinstance(node, ast.Import) and "__future__" in [name.name for name in node.names]:
+    if isinstance(node, ast.Import) and "__future__" in [
+        name.name for name in node.names
+    ]:
         return True
     if isinstance(node, ast.ImportFrom) and node.module == "__future__":
         return True

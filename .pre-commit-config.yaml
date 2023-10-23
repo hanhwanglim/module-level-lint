@@ -15,9 +15,9 @@ repos:
       - id: check-ast
       - id: check-builtin-literals
       - id: check-docstring-first
+        exclude: "tests/fixtures/"
       - id: check-yaml
       - id: debug-statements
-      - id: double-quote-string-fixer
       - id: end-of-file-fixer
       - id: sort-simple-yaml
       - id: trailing-whitespace
