@@ -2,9 +2,13 @@
 name = "module-level-lint"
 version = "0.1.0"
 description = ""
+license = "MIT"
 authors = ["Han Hwang Lim <hanhwanglim@gmail.com>"]
 readme = "README.md"
+repository = "https://github.com/hanhwanglim/module-level-lint"
 packages = [{include = "module_level_lint"}]
+keywords = ["flake8", "lint"]
+classifiers = ["Framework :: Flake8"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
