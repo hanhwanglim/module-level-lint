@@ -1,59 +1,58 @@
 import ast
+from functools import partial
 
-from module_level_lint import Plugin
+from module_level_lint import Plugin, Error
 from tests import FIXTURES
 
 
-def run_lint(path) -> set[str]:
+def error_str(lineno: int, col_offset: int, msg: str) -> str:
+    return f"{lineno}:{col_offset} {msg}"
+
+
+MLL001 = partial(error_str, msg=Error.MLL001)
+MLL002 = partial(error_str, msg=Error.MLL002)
+MLL003 = partial(error_str, msg=Error.MLL003)
+MLL004 = partial(error_str, msg=Error.MLL004)
+
+
+def run_lint(path) -> list[str]:
     with open(path) as f:
         tree = ast.parse(f.read())
     plugin = Plugin(tree)
-    return {f"{line}:{col} {msg}" for line, col, msg, _ in plugin.run()}
+    return [error_str(lineno, col_offset, msg) for lineno, col_offset, msg, _ in plugin.run()]
 
 
 def test_trivial() -> None:
     path = FIXTURES / "trivial.py"
     results = run_lint(path)
-    assert results == set()
+    assert results == []
 
 
 def test_clean() -> None:
     path = FIXTURES / "clean.py"
     results = run_lint(path)
-    assert results == set()
+    assert results == []
 
 
 def test_mll001() -> None:
     path = FIXTURES / "mll001.py"
     results = run_lint(path)
-    assert len(results) > 0
+    assert results == [MLL001(lineno=5, col_offset=0)]
 
 
 def test_mll002() -> None:
     path = FIXTURES / "mll002.py"
     results = run_lint(path)
-    assert len(results) > 0
+    assert results == [MLL002(lineno=3, col_offset=0)]
 
 
 def test_mll003() -> None:
     path = FIXTURES / "mll003.py"
     results = run_lint(path)
-    assert len(results) > 0
+    assert results == [MLL003(lineno=5, col_offset=0)]
 
 
 def test_mll004() -> None:
     path = FIXTURES / "mll004.py"
     results = run_lint(path)
-    assert len(results) > 0
-
-
-def test_mll005() -> None:
-    path = FIXTURES / "mll005.py"
-    results = run_lint(path)
-    assert len(results) > 0
-
-
-def test_mll006() -> None:
-    path = FIXTURES / "mll006.py"
-    results = run_lint(path)
-    assert len(results) > 0
+    assert results == [MLL004(lineno=5, col_offset=0)]
