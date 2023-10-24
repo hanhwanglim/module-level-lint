@@ -48,9 +48,12 @@ def is_future_import(node: ast.stmt) -> bool:
 def is_dunder(node: ast.stmt) -> bool:
     if not isinstance(node, ast.Assign):
         return False
-    for target in node.targets:  # type: ast.Name
-        if re.match(DUNDER_PATTERN, target.id):
-            return True
+    for target in node.targets:  # type: ast.AST
+        for child_node in ast.walk(target):
+            if isinstance(child_node, ast.Name) and re.match(
+                DUNDER_PATTERN, child_node.id
+            ):
+                return True
     return False
 
 
