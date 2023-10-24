@@ -70,9 +70,27 @@ from __future__ import division
 import random
 ```
 
+- Linting Error: **MLL003**
+
+Example:
+
+```python
+from __future__ import print_function
+
+# Bad: Docstring is not at the top of the file
+"""This is a docstring."""
+```
+
+```python
+"""This is a docstring."""
+
+# Good: Future-imports is at the top of the file after docstring
+from __future__ import division
+```
+
 ### Module-Level Dunders: Ensure that module level dunders are always at the top after future-imports or docstrings
 
-- Linting Error: **MLL003**
+- Linting Error: **MLL004**
 
 Example:
 
