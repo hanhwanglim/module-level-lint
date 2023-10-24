@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "module-level-lint"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Flake8 plugin to checking module level docstrings, future-imports, and dunders as specified in PEP 8"
 license = "MIT"
 authors = ["Han Hwang Lim <hanhwanglim@gmail.com>"]
