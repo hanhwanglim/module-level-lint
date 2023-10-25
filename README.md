@@ -21,7 +21,13 @@ flake8 [path]
 To show only module level lint errors, run:
 
 ```bash
-flake8 --select MLL001,MLL002,MLL003 [path]
+flake8 --select MLL [path]
+```
+
+To show only specific errors
+
+```bash
+flake8 --select MLL001,MLL002 [path]
 ```
 
 ## Features
@@ -136,7 +142,7 @@ This plugin doesn't require any specific configuration, but you can include its 
 
 ```ini
 [flake8]
-extend-ignore = MLL001, MLL002, MLL003
+extend-ignore = MLL001, MLL002, MLL003, MLL004
 ```
 
 ## Contributing
