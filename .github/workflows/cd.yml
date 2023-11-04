@@ -1,6 +1,9 @@
 name: Publish
 
-on: push
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -27,16 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: test.pypi.org/p/module-level-lint
+      url: https://test.pypi.org/p/module-level-lint
     permissions:
       id-token: write
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: Artifact
+          name: artifact
           path: dist/
       - name: Publish distribution
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
 
   release:
     name: Create GitHub Release Package
@@ -47,20 +53,29 @@ jobs:
       contents: write
       id-token: write
     steps:
+      - uses: actions/checkout@v4
       - name: Download all dists
         uses: actions/download-artifact@v3
         with:
-          name: Artifact
+          name: artifact
           path: dist/
       - name: Sign dists
-        uses: sigstore/gh-actions-sigstore-python@v1.2.3
+        uses: sigstore/gh-action-sigstore-python@v2.1.0
         with:
           inputs: >-
             ./dist/*.tar.gz
             ./dist/*.whl
       - name: Create GitHub Release
-        run: gh release create '${{ github.ref_name }}' --notes ""
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create
+          '${{ github.ref_name }}'
+          --notes ""
       - name: Upload artifact signatures to GitHub Release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: gh release upload '${{ github.ref_name }}' dist/** --repo '${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload
+          '${{ github.ref_name }}' dist/**
+          --repo '${{ github.repository }}'
