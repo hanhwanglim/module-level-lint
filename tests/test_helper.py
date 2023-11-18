@@ -2,7 +2,7 @@ import ast
 
 import pytest
 
-from module_level_lint import is_module_docstring, is_dunder, is_future_import
+from module_level_lint.utils import is_module_docstring, is_dunder, is_future_import
 
 
 @pytest.mark.parametrize(

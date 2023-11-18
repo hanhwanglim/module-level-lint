@@ -2,7 +2,8 @@ import ast
 from functools import partial
 from pathlib import Path
 
-from module_level_lint import Plugin, Error
+from module_level_lint import Plugin
+from module_level_lint.error import Error
 from tests import FIXTURES
 
 
@@ -19,7 +20,7 @@ MLL004 = partial(error_str, msg=Error.MLL004)
 def run_lint(path: Path) -> list[str]:
     with open(path) as f:
         tree = ast.parse(f.read())
-    plugin = Plugin(tree)
+    plugin = Plugin(tree, str(path))
     return [
         error_str(lineno, col_offset, msg)
         for lineno, col_offset, msg, _ in plugin.run()
