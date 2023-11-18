@@ -1,8 +1,11 @@
+import argparse
 import re
 import ast
 import importlib.metadata
 from enum import IntEnum
 from typing import Any, Generator
+
+from flake8.options.manager import OptionManager
 
 DUNDER_PATTERN = r"^__[a-zA-Z_]\w*__$"
 
@@ -96,9 +99,21 @@ class Visitor(ast.NodeVisitor):
 class Plugin:
     name = __name__
     version = importlib.metadata.version(__name__)
+    should_fix = False
 
-    def __init__(self, tree: ast.AST) -> None:
+    def __init__(self, tree: ast.AST, filename: str) -> None:
         self.tree = tree
+        self.filename = filename
+
+    @staticmethod
+    def add_options(option_manager: OptionManager) -> None:
+        option_manager.add_option(
+            "--fix", action=argparse.BooleanOptionalAction, help="Fix code"
+        )
+
+    @classmethod
+    def parse_options(cls, options: argparse.Namespace) -> None:
+        cls.should_fix = options.fix or False
 
     def run(self) -> Generator[tuple[int, int, str, type[Any]], None, None]:
         visitor = Visitor()
