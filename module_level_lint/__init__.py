@@ -5,6 +5,7 @@ from typing import Any, Generator
 
 from flake8.options.manager import OptionManager
 
+from module_level_lint.format import lazy_format
 from module_level_lint.lint import Visitor
 
 
@@ -28,12 +29,15 @@ class Plugin:
         cls.should_fix = options.fix or False
 
     def run(self) -> Generator[tuple[int, int, str, type[Any]], None, None]:
-        if self.should_fix:
-            # todo: implement fix
-            yield from []
-
         visitor = Visitor()
         visitor.visit(self.tree)
 
-        for lineno, col_offset, msg in visitor.errors:
-            yield lineno, col_offset, msg, type(self)
+        if not self.should_fix:
+            for lineno, col_offset, msg in visitor.errors:
+                yield lineno, col_offset, msg, type(self)
+            return
+
+        if self.should_fix and not visitor.errors:
+            changed = not lazy_format(self.filename, self.tree)
+            errors = [(0, 0, f"Fixed {self.filename}", type(self))] if changed else []
+            yield from errors
