@@ -6,7 +6,10 @@ from os import PathLike
 from module_level_lint.utils import is_module_docstring, is_future_import, is_dunder
 
 
-def trim_lines(tokens: list[str], end_line: int) -> None:
+def trim_lines(tokens: list[str], end_line: int | None) -> None:
+    if end_line is None:
+        raise ValueError("end_line is None")
+
     with suppress(IndexError):
         if tokens[end_line] != "\n":
             tokens[end_line - 1] += "\n"
@@ -22,10 +25,10 @@ class LazyVisitor(ast.NodeVisitor):
     def __init__(self, tree: ast.AST):
         self.tree = tree
 
-        self.docstring_lines = []
-        self.future_import_lines = []
-        self.module_dunder_lines = []
-        self.statement_definitions = []
+        self.docstring_lines: list[tuple[int, int | None]] = []
+        self.future_import_lines: list[tuple[int, int | None]] = []
+        self.module_dunder_lines: list[tuple[int, int | None]] = []
+        self.statement_definitions: list[tuple[int, int | None]] = []
 
     def visit_Module(self, node: ast.Module):
         for body in node.body:
@@ -84,6 +87,8 @@ def lazy_format(
             or visitor.docstring_lines
         )
         end_line = last_node[-1][1]
+        if end_line is None:
+            raise ValueError("end_line is None")
         tokens[end_line - 1] += "\n"
 
     if tokens:

@@ -17,7 +17,8 @@ from module_level_lint.utils import is_module_docstring, is_dunder, is_future_im
 def test_is_module_docstring(code: str, expected: bool) -> None:
     has_docstring = False
     for node in ast.walk(ast.parse(code)):
-        has_docstring = has_docstring or is_module_docstring(node)
+        if isinstance(node, ast.stmt):
+            has_docstring = has_docstring or is_module_docstring(node)
     assert has_docstring == expected
 
 
@@ -40,7 +41,8 @@ def test_is_module_docstring(code: str, expected: bool) -> None:
 def test_is_future_import(code: str, expected: bool) -> None:
     has_future_import = False
     for node in ast.walk(ast.parse(code)):
-        has_future_import = has_future_import or is_future_import(node)
+        if isinstance(node, ast.stmt):
+            has_future_import = has_future_import or is_future_import(node)
     assert has_future_import == expected
 
 
@@ -73,5 +75,6 @@ def test_is_future_import(code: str, expected: bool) -> None:
 def test_is_dunder(code: str, expected: bool) -> None:
     has_dunder = False
     for node in ast.walk(ast.parse(code)):
-        has_dunder = has_dunder or is_dunder(node)
+        if isinstance(node, ast.stmt):
+            has_dunder = has_dunder or is_dunder(node)
     assert has_dunder == expected

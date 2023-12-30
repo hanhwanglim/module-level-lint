@@ -3,7 +3,7 @@ import ast
 import importlib.metadata
 from typing import Any, Generator
 
-from flake8.options.manager import OptionManager
+from flake8.options.manager import OptionManager  # type: ignore
 
 from module_level_lint.format import lazy_format
 from module_level_lint.lint import Visitor

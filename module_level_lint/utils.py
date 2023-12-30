@@ -7,10 +7,10 @@ DUNDER_PATTERN = r"^__[a-zA-Z_]\w*__$"
 def is_module_docstring(node: ast.stmt) -> bool:
     if not isinstance(node, ast.Expr):
         return False
-    node = node.value
-    if not isinstance(node, ast.Str):
+    expr = node.value
+    if not isinstance(expr, ast.Str):
         return False
-    if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+    if not isinstance(expr, ast.Constant) or not isinstance(expr.value, str):
         return False
     return True
 
