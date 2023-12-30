@@ -30,9 +30,17 @@ To show only specific errors
 flake8 --select MLL001,MLL002 [path]
 ```
 
+To apply formatting
+
+```bash
+flake8 --select MLL [path] --fix
+```
+
 ## Features
 
-### Module Docstring Check: Ensure that your docstrings are always at the top of the file
+### Lint
+
+#### Module Docstring Check: Ensure that your docstrings are always at the top of the file
 
 - Linting Error: **MLL001**
 
@@ -56,7 +64,7 @@ def foo():
     pass
 ```
 
-### Future-Imports Check: Ensure that future-imports are always at the top after module docstrings
+#### Future-Imports Check: Ensure that future-imports are always at the top after module docstrings
 
 - Linting Error: **MLL002**
 
@@ -94,7 +102,7 @@ from __future__ import print_function
 from __future__ import division
 ```
 
-### Module-Level Dunders: Ensure that module level dunders are always at the top after future-imports or docstrings
+#### Module-Level Dunders: Ensure that module level dunders are always at the top after future-imports or docstrings
 
 - Linting Error: **MLL004**
 
@@ -134,6 +142,24 @@ __all__ = ["foo"]
 
 def foo():
     pass
+```
+
+### Format
+
+With the `--fix` flag, this plugin will try to format the files that have no rule violations. It will fix the newlines in the following format:
+
+```python
+"""Docstring goes here"""   # An empty line after docstrings
+
+from __future__ import annotations  # An empty line after future imports
+
+__all__ = ["foo"]  # An empty line after module dunders
+
+import random   # Rest of the code
+
+
+def foo():
+    return random.randint(1, 10)
 ```
 
 ## Configuration
