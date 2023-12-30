@@ -25,6 +25,7 @@ class LazyVisitor(ast.NodeVisitor):
         self.docstring_lines = []
         self.future_import_lines = []
         self.module_dunder_lines = []
+        self.statement_definitions = []
 
     def visit_Module(self, node: ast.Module):
         for body in node.body:
@@ -34,6 +35,11 @@ class LazyVisitor(ast.NodeVisitor):
                 self.future_import_lines.append((body.lineno, body.end_lineno))
             elif is_dunder(body):
                 self.module_dunder_lines.append((body.lineno, body.end_lineno))
+            elif isinstance(body, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                self.statement_definitions.append((body.lineno, body.end_lineno))
+                break
+            else:
+                break
 
 
 def lazy_format(
@@ -44,8 +50,10 @@ def lazy_format(
 
     :return: formatted content or None depending on `write`
     """
+    with open(filename) as f:
+        src = f.read()
+
     tokens: list[str] = list(tokenize.open(filename))
-    src = "".join(tokens)
 
     visitor = LazyVisitor(tree)
     visitor.visit(tree)
@@ -67,7 +75,15 @@ def lazy_format(
         end_line = visitor.module_dunder_lines[-1][1]
         trim_lines(tokens, end_line)
 
-    formatted = "".join(tokens)
+    if visitor.statement_definitions:
+        last_node = visitor.module_dunder_lines or visitor.future_import_lines or visitor.docstring_lines
+        end_line = last_node[-1][1]
+        tokens[end_line - 1] += "\n"
+
+    if tokens:
+        formatted = "".join(tokens).rstrip() + "\n"
+    else:
+        formatted = ""
 
     if not write:
         return formatted
