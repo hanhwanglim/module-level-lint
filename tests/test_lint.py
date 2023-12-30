@@ -40,24 +40,24 @@ def test_clean() -> None:
 
 
 def test_mll001() -> None:
-    path = FIXTURES / "mll001.py"
+    path = FIXTURES / "lint" / "mll001.py"
     results = run_lint(path)
     assert results == [MLL001(lineno=5, col_offset=0)]
 
 
 def test_mll002() -> None:
-    path = FIXTURES / "mll002.py"
+    path = FIXTURES / "lint" / "mll002.py"
     results = run_lint(path)
     assert results == [MLL002(lineno=3, col_offset=0)]
 
 
 def test_mll003() -> None:
-    path = FIXTURES / "mll003.py"
+    path = FIXTURES / "lint" / "mll003.py"
     results = run_lint(path)
     assert results == [MLL003(lineno=5, col_offset=0)]
 
 
 def test_mll004() -> None:
-    path = FIXTURES / "mll004.py"
+    path = FIXTURES / "lint" / "mll004.py"
     results = run_lint(path)
     assert results == [MLL004(lineno=5, col_offset=0)]
