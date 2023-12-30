@@ -35,7 +35,9 @@ class LazyVisitor(ast.NodeVisitor):
                 self.future_import_lines.append((body.lineno, body.end_lineno))
             elif is_dunder(body):
                 self.module_dunder_lines.append((body.lineno, body.end_lineno))
-            elif isinstance(body, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            elif isinstance(
+                body, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+            ):
                 self.statement_definitions.append((body.lineno, body.end_lineno))
                 break
             else:
@@ -76,7 +78,11 @@ def lazy_format(
         trim_lines(tokens, end_line)
 
     if visitor.statement_definitions:
-        last_node = visitor.module_dunder_lines or visitor.future_import_lines or visitor.docstring_lines
+        last_node = (
+            visitor.module_dunder_lines
+            or visitor.future_import_lines
+            or visitor.docstring_lines
+        )
         end_line = last_node[-1][1]
         tokens[end_line - 1] += "\n"
 

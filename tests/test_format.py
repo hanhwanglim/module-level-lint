@@ -29,9 +29,11 @@ class TestLazyFormat:
             pytest.param("function.py", "function_formatted.py", id="function"),
             pytest.param("newline.py", "newline_formatted.py", id="newline"),
             pytest.param("script.py", "script_formatted.py", id="script"),
-        ]
+        ],
     )
-    def test_format(self, expected_file: str, actual_file: str, request: pytest.FixtureRequest) -> None | NoReturn:
+    def test_format(
+        self, expected_file: str, actual_file: str, request: pytest.FixtureRequest
+    ) -> None | NoReturn:
         with (
             open(FIXTURES / "format" / expected_file) as expected,
             open(FIXTURES / "format" / actual_file) as actual,
