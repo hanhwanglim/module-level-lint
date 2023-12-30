@@ -2,11 +2,12 @@ import ast
 import tokenize
 from contextlib import suppress
 from os import PathLike
+from typing import Union
 
 from module_level_lint.utils import is_module_docstring, is_future_import, is_dunder
 
 
-def trim_lines(tokens: list[str], end_line: int | None) -> None:
+def trim_lines(tokens: list[str], end_line: Union[int, None]) -> None:
     if end_line is None:
         raise ValueError("end_line is None")
 
@@ -25,10 +26,10 @@ class LazyVisitor(ast.NodeVisitor):
     def __init__(self, tree: ast.AST):
         self.tree = tree
 
-        self.docstring_lines: list[tuple[int, int | None]] = []
-        self.future_import_lines: list[tuple[int, int | None]] = []
-        self.module_dunder_lines: list[tuple[int, int | None]] = []
-        self.statement_definitions: list[tuple[int, int | None]] = []
+        self.docstring_lines: list[tuple[int, Union[int, None]]] = []
+        self.future_import_lines: list[tuple[int, Union[int, None]]] = []
+        self.module_dunder_lines: list[tuple[int, Union[int, None]]] = []
+        self.statement_definitions: list[tuple[int, Union[int, None]]] = []
 
     def visit_Module(self, node: ast.Module):
         for body in node.body:
@@ -48,8 +49,8 @@ class LazyVisitor(ast.NodeVisitor):
 
 
 def lazy_format(
-    filename: str | PathLike, tree: ast.AST, write: bool = True
-) -> str | bool:
+    filename: Union[str, PathLike], tree: ast.AST, write: bool = True
+) -> Union[str, bool]:
     """
     Only formats the newlines in module level
 
