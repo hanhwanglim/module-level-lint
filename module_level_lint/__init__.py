@@ -1,108 +1,43 @@
-import re
+import argparse
 import ast
 import importlib.metadata
-from enum import IntEnum
 from typing import Any, Generator
 
-DUNDER_PATTERN = r"^__[a-zA-Z_]\w*__$"
+from flake8.options.manager import OptionManager  # type: ignore
 
-
-class Error:
-    MLL001 = "MLL001 Module level docstring appears after code"
-    MLL002 = "MLL002 Module level future-imports appears after module level dunders"
-    MLL003 = "MLL003 Module level future-imports appears after code"
-    MLL004 = "MLL004 Module level dunders appears after code"
-
-
-class NodeType(IntEnum):
-    UNINITIALIZED = 0
-    MODULE_DOCSTRING = 1
-    FUTURE_IMPORT = 2
-    MODULE_DUNDER = 3
-    OTHER_CODE = 4
-
-
-def is_module_docstring(node: ast.stmt) -> bool:
-    if not isinstance(node, ast.Expr):
-        return False
-    node = node.value
-    if not isinstance(node, ast.Str):
-        return False
-    if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-        return False
-    return True
-
-
-def is_future_import(node: ast.stmt) -> bool:
-    if not isinstance(node, (ast.Import, ast.ImportFrom)):
-        return False
-    if isinstance(node, ast.Import) and "__future__" in [
-        name.name for name in node.names
-    ]:
-        return True
-    if isinstance(node, ast.ImportFrom) and node.module == "__future__":
-        return True
-    return False
-
-
-def is_dunder(node: ast.stmt) -> bool:
-    if not isinstance(node, ast.Assign):
-        return False
-    for target in node.targets:  # type: ast.AST
-        for child_node in ast.walk(target):
-            if isinstance(child_node, ast.Name) and re.match(
-                DUNDER_PATTERN, child_node.id
-            ):
-                return True
-    return False
-
-
-class Visitor(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.errors: list[tuple[int, int, str]] = []
-
-    def visit_Module(self, node: ast.Module) -> None:
-        seen_node_type = NodeType.UNINITIALIZED
-
-        for body in node.body:
-            if is_module_docstring(body):
-                seen_node_type = max(seen_node_type, NodeType.MODULE_DOCSTRING)
-                curr_node_type = NodeType.MODULE_DOCSTRING
-            elif is_future_import(body):
-                seen_node_type = max(seen_node_type, NodeType.FUTURE_IMPORT)
-                curr_node_type = NodeType.FUTURE_IMPORT
-            elif is_dunder(body):
-                seen_node_type = max(seen_node_type, NodeType.MODULE_DUNDER)
-                curr_node_type = NodeType.MODULE_DUNDER
-            else:
-                seen_node_type = max(seen_node_type, NodeType.OTHER_CODE)
-                curr_node_type = NodeType.OTHER_CODE
-
-            self.check(body, curr_node_type, seen_node_type)
-
-        self.generic_visit(node)
-
-    def check(self, node: ast.stmt, node_type: NodeType, seen: NodeType) -> None:
-        if node_type == NodeType.MODULE_DOCSTRING and seen > NodeType.MODULE_DOCSTRING:
-            self.errors.append((node.lineno, node.col_offset, Error.MLL001))
-        elif node_type == NodeType.FUTURE_IMPORT and seen == NodeType.MODULE_DUNDER:
-            self.errors.append((node.lineno, node.col_offset, Error.MLL002))
-        elif node_type == NodeType.FUTURE_IMPORT and seen == NodeType.OTHER_CODE:
-            self.errors.append((node.lineno, node.col_offset, Error.MLL003))
-        elif node_type == NodeType.MODULE_DUNDER and seen == NodeType.OTHER_CODE:
-            self.errors.append((node.lineno, node.col_offset, Error.MLL004))
+from module_level_lint.format import lazy_format
+from module_level_lint.lint import Visitor
 
 
 class Plugin:
     name = __name__
     version = importlib.metadata.version(__name__)
+    should_fix = False
 
-    def __init__(self, tree: ast.AST) -> None:
+    def __init__(self, tree: ast.AST, filename: str) -> None:
         self.tree = tree
+        self.filename = filename
+
+    @staticmethod
+    def add_options(option_manager: OptionManager) -> None:
+        option_manager.add_option(
+            "--fix", action=argparse.BooleanOptionalAction, help="Fix code"
+        )
+
+    @classmethod
+    def parse_options(cls, options: argparse.Namespace) -> None:
+        cls.should_fix = options.fix or False
 
     def run(self) -> Generator[tuple[int, int, str, type[Any]], None, None]:
         visitor = Visitor()
         visitor.visit(self.tree)
 
-        for lineno, col_offset, msg in visitor.errors:
-            yield lineno, col_offset, msg, type(self)
+        if not self.should_fix:
+            for lineno, col_offset, msg in visitor.errors:
+                yield lineno, col_offset, msg, type(self)
+            return
+
+        if self.should_fix and not visitor.errors:
+            changed = not lazy_format(self.filename, self.tree)
+            errors = [(0, 0, f"Fixed {self.filename}", type(self))] if changed else []
+            yield from errors
