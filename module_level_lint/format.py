@@ -76,11 +76,3 @@ def lazy_format(
         f.write(formatted)
 
     return src == formatted
-
-
-def format_file():
-    """
-    Full format of the file
-    :return:
-    """
-    ...
