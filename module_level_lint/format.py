@@ -87,10 +87,12 @@ def lazy_format(
             or visitor.future_import_lines
             or visitor.docstring_lines
         )
-        end_line = last_node[-1][1]
-        if end_line is None:
-            raise ValueError("end_line is None")
-        tokens[end_line - 1] += "\n"
+
+        if last_node:
+            end_line = last_node[-1][1]
+            if end_line is None:
+                raise ValueError("end_line is None")
+            tokens[end_line - 1] += "\n"
 
     if tokens:
         formatted = "".join(tokens).rstrip() + "\n"
