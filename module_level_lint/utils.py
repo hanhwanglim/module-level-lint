@@ -8,8 +8,6 @@ def is_module_docstring(node: ast.stmt) -> bool:
     if not isinstance(node, ast.Expr):
         return False
     expr = node.value
-    if not isinstance(expr, ast.Str):
-        return False
     if not isinstance(expr, ast.Constant) or not isinstance(expr.value, str):
         return False
     return True
